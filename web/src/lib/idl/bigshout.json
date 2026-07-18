@@ -1,0 +1,991 @@
+{
+  "address": "DanMuZ6VfwEmhn2rj5hiXVhQXNpNv7ornBRNnjaia9oH",
+  "metadata": {
+    "name": "bigshout",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "BigShout — swipe-to-predict with oracle-proven settlement"
+  },
+  "instructions": [
+    {
+      "name": "claim",
+      "discriminator": [
+        62,
+        198,
+        214,
+        193,
+        213,
+        159,
+        108,
+        210
+      ],
+      "accounts": [
+        {
+          "name": "market"
+        },
+        {
+          "name": "position",
+          "writable": true
+        },
+        {
+          "name": "player",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  108,
+                  97,
+                  121,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "position.user",
+                "account": "Position"
+              }
+            ]
+          }
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "create_market",
+      "discriminator": [
+        103,
+        226,
+        97,
+        235,
+        200,
+        188,
+        251,
+        254
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "market",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "market_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "market_id",
+          "type": "u64"
+        },
+        {
+          "name": "fixture_id",
+          "type": "i64"
+        },
+        {
+          "name": "stat_key",
+          "type": "u32"
+        },
+        {
+          "name": "threshold",
+          "type": "i32"
+        },
+        {
+          "name": "deadline_ts",
+          "type": "i64"
+        },
+        {
+          "name": "yes_odds_bps",
+          "type": "u32"
+        },
+        {
+          "name": "no_odds_bps",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "init_config",
+      "discriminator": [
+        23,
+        235,
+        115,
+        232,
+        168,
+        96,
+        1,
+        231
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "predict",
+      "discriminator": [
+        254,
+        114,
+        112,
+        244,
+        37,
+        49,
+        32,
+        128
+      ],
+      "accounts": [
+        {
+          "name": "user",
+          "signer": true
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "market",
+          "writable": true
+        },
+        {
+          "name": "player",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  108,
+                  97,
+                  121,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "user"
+              }
+            ]
+          }
+        },
+        {
+          "name": "position",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  115,
+                  105,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "market"
+              },
+              {
+                "kind": "account",
+                "path": "user"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "side",
+          "type": "bool"
+        },
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "settle_expired",
+      "discriminator": [
+        187,
+        68,
+        57,
+        40,
+        121,
+        72,
+        73,
+        161
+      ],
+      "accounts": [
+        {
+          "name": "settler",
+          "signer": true
+        },
+        {
+          "name": "market",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "settle_proven",
+      "discriminator": [
+        6,
+        157,
+        188,
+        74,
+        149,
+        78,
+        74,
+        168
+      ],
+      "accounts": [
+        {
+          "name": "settler",
+          "signer": true
+        },
+        {
+          "name": "market",
+          "writable": true
+        },
+        {
+          "name": "daily_scores_merkle_roots",
+          "docs": [
+            "proof timestamp under the TxLINE program id; the TxLINE program",
+            "additionally verifies the Merkle root it contains."
+          ]
+        },
+        {
+          "name": "txoracle_program",
+          "address": "6pW64gN1s2uqjHkn1unFeEjAwJkPGHoppGvS715wyP2J"
+        }
+      ],
+      "args": [
+        {
+          "name": "payload",
+          "type": {
+            "defined": {
+              "name": "StatValidationInput"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "update_odds",
+      "discriminator": [
+        185,
+        97,
+        196,
+        202,
+        171,
+        32,
+        3,
+        160
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "market",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "yes_odds_bps",
+          "type": "u32"
+        },
+        {
+          "name": "no_odds_bps",
+          "type": "u32"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Config",
+      "discriminator": [
+        155,
+        12,
+        170,
+        224,
+        30,
+        250,
+        204,
+        130
+      ]
+    },
+    {
+      "name": "Market",
+      "discriminator": [
+        219,
+        190,
+        213,
+        55,
+        0,
+        227,
+        198,
+        154
+      ]
+    },
+    {
+      "name": "Player",
+      "discriminator": [
+        205,
+        222,
+        112,
+        7,
+        165,
+        155,
+        206,
+        218
+      ]
+    },
+    {
+      "name": "Position",
+      "discriminator": [
+        170,
+        188,
+        143,
+        228,
+        122,
+        64,
+        247,
+        208
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "NotAdmin",
+      "msg": "Only the config admin may perform this operation"
+    },
+    {
+      "code": 6001,
+      "name": "DeadlineInPast",
+      "msg": "Deadline must be in the future"
+    },
+    {
+      "code": 6002,
+      "name": "OddsOutOfRange",
+      "msg": "Odds out of range (10_000..=1_000_000 bps)"
+    },
+    {
+      "code": 6003,
+      "name": "MarketNotOpen",
+      "msg": "Market is not open"
+    },
+    {
+      "code": 6004,
+      "name": "PredictionsClosed",
+      "msg": "Prediction window is closed"
+    },
+    {
+      "code": 6005,
+      "name": "ZeroAmount",
+      "msg": "Stake must be greater than zero"
+    },
+    {
+      "code": 6006,
+      "name": "InsufficientPoints",
+      "msg": "Insufficient points"
+    },
+    {
+      "code": 6007,
+      "name": "FixtureMismatch",
+      "msg": "Proof fixture does not match this market"
+    },
+    {
+      "code": 6008,
+      "name": "StatKeyMismatch",
+      "msg": "Proof stat keys do not match the market's stat key"
+    },
+    {
+      "code": 6009,
+      "name": "ProofAfterDeadline",
+      "msg": "Proof record is timestamped after the market deadline"
+    },
+    {
+      "code": 6010,
+      "name": "WrongRootAccount",
+      "msg": "Wrong daily scores root account for the proof timestamp"
+    },
+    {
+      "code": 6011,
+      "name": "ProofInvalid",
+      "msg": "TxLINE on-chain validation rejected the proof"
+    },
+    {
+      "code": 6012,
+      "name": "ExpiryTooEarly",
+      "msg": "Expiry grace period has not elapsed; a YES proof may be in flight"
+    },
+    {
+      "code": 6013,
+      "name": "NotSettled",
+      "msg": "Market is not settled"
+    },
+    {
+      "code": 6014,
+      "name": "AlreadyClaimed",
+      "msg": "Position already claimed"
+    },
+    {
+      "code": 6015,
+      "name": "MathOverflow",
+      "msg": "Arithmetic overflow"
+    }
+  ],
+  "types": [
+    {
+      "name": "Config",
+      "docs": [
+        "One-time program config. The admin (the operator's service wallet) is the",
+        "only key that may create markets or move odds — the operator is a trusted",
+        "market-maker. Settlement is NOT restricted: any key with a valid TxLINE",
+        "proof (or an expired deadline) can settle, so the operator is an",
+        "untrusted settler."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Market",
+      "docs": [
+        "A binary fixed-odds micro-market over one provable TxLINE stat:",
+        "\"will `stat_key` exceed `threshold` before `deadline_ts`?\""
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "market_id",
+            "docs": [
+              "Operator-assigned unique id; PDA seed. Card copy (\"will this corner",
+              "become a goal?\") lives off-chain keyed by this id — on-chain only the",
+              "provable predicate matters."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "fixture_id",
+            "docs": [
+              "TxLINE fixture id this market observes."
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "stat_key",
+            "docs": [
+              "TxLINE stat key (`period_prefix + base_key`) the proof must contain."
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "threshold",
+            "docs": [
+              "YES wins when the oracle proves `stat value > threshold` in a record",
+              "timestamped at/before `deadline_ts`."
+            ],
+            "type": "i32"
+          },
+          {
+            "name": "created_ts",
+            "type": "i64"
+          },
+          {
+            "name": "deadline_ts",
+            "docs": [
+              "Unix seconds. Predictions rejected at/after this time; a settlement",
+              "proof's record timestamp must be at/before it."
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "yes_odds_bps",
+            "docs": [
+              "Current decimal odds in bps for each side. Snapshotted onto the",
+              "Position at lock time — players win at the price they took."
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "no_odds_bps",
+            "type": "u32"
+          },
+          {
+            "name": "status",
+            "type": {
+              "defined": {
+                "name": "MarketStatus"
+              }
+            }
+          },
+          {
+            "name": "settled_proof_ts",
+            "docs": [
+              "TxLINE record timestamp (ms) of the proof used to settle YES."
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "yes_count",
+            "docs": [
+              "Live consensus tallies, readable by anyone (the consensus reveal and",
+              "the sentiment dataset are views over these)."
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "no_count",
+            "type": "u32"
+          },
+          {
+            "name": "yes_staked",
+            "type": "u64"
+          },
+          {
+            "name": "no_staked",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MarketStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Open"
+          },
+          {
+            "name": "YesWon"
+          },
+          {
+            "name": "NoWon"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Player",
+      "docs": [
+        "Per-player points and reputation. Points are a plain u64: free,",
+        "non-cashable, non-transferable — a scorekeeping system, not a treasury."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "points",
+            "type": "u64"
+          },
+          {
+            "name": "last_refill_ts",
+            "docs": [
+              "Start of the last UTC day the daily allowance was topped up."
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "streak",
+            "type": "u16"
+          },
+          {
+            "name": "best_streak",
+            "type": "u16"
+          },
+          {
+            "name": "correct",
+            "type": "u32"
+          },
+          {
+            "name": "total",
+            "type": "u32"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Position",
+      "docs": [
+        "One player's sealed call on one market. Persists forever after claim —",
+        "this account IS the receipt: what you said, when you locked it, at what",
+        "odds, and how it settled."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "market",
+            "type": "pubkey"
+          },
+          {
+            "name": "user",
+            "docs": [
+              "The player's wallet (Player PDA authority), not the fee payer."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "side",
+            "docs": [
+              "true = YES, false = NO."
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "amount",
+            "docs": [
+              "Points staked."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "odds_bps",
+            "docs": [
+              "Decimal odds (bps) snapshotted from the market at lock time."
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "locked_ts",
+            "docs": [
+              "Unix seconds when the call was sealed — before the outcome was known."
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "claimed",
+            "type": "bool"
+          },
+          {
+            "name": "won",
+            "docs": [
+              "Set at claim; lets indexers read outcomes without joining the market."
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ProofNode",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "is_right_sibling",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ScoreStat",
+      "docs": [
+        "The on-chain representation of a single, provable key-value statistic.",
+        "This is the leaf of the inner-most Merkle tree."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "key",
+            "type": "u32"
+          },
+          {
+            "name": "value",
+            "type": "i32"
+          },
+          {
+            "name": "period",
+            "type": "i32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ScoresBatchSummary",
+      "docs": [
+        "The summary for a single fixture's scores events within a 5-minute batch.",
+        "This contains the root of the sub-tree of all events for that fixture."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "fixture_id",
+            "type": "i64"
+          },
+          {
+            "name": "update_stats",
+            "type": {
+              "defined": {
+                "name": "ScoresUpdateStats"
+              }
+            }
+          },
+          {
+            "name": "events_sub_tree_root",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "ScoresUpdateStats",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "update_count",
+            "type": "i32"
+          },
+          {
+            "name": "min_timestamp",
+            "type": "i64"
+          },
+          {
+            "name": "max_timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "StatLeaf",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "stat",
+            "type": {
+              "defined": {
+                "name": "ScoreStat"
+              }
+            }
+          },
+          {
+            "name": "stat_proof",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "ProofNode"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "StatValidationInput",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "ts",
+            "type": "i64"
+          },
+          {
+            "name": "fixture_summary",
+            "type": {
+              "defined": {
+                "name": "ScoresBatchSummary"
+              }
+            }
+          },
+          {
+            "name": "fixture_proof",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "ProofNode"
+                }
+              }
+            }
+          },
+          {
+            "name": "main_tree_proof",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "ProofNode"
+                }
+              }
+            }
+          },
+          {
+            "name": "event_stat_root",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "stats",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "StatLeaf"
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

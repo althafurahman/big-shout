@@ -1,0 +1,22 @@
+skip_local_validator = true
+
+[toolchain]
+
+[features]
+resolution = true
+skip-lint = false
+
+[programs.localnet]
+bigshout = "DanMuZ6VfwEmhn2rj5hiXVhQXNpNv7ornBRNnjaia9oH"
+
+[programs.devnet]
+bigshout = "DanMuZ6VfwEmhn2rj5hiXVhQXNpNv7ornBRNnjaia9oH"
+
+[provider]
+cluster = "devnet"
+wallet = "../cranker/_keys/service-wallet.json"
+
+[scripts]
+test = "cargo test"
+
+[hooks]

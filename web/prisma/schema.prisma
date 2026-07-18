@@ -1,0 +1,165 @@
+// BigShout shared schema. The cranker mirrors the non-web tables in
+// cranker/src/db.ts (CREATE IF NOT EXISTS) — keep both in sync.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---- web-owned ----
+
+model User {
+  id              String   @id @default(cuid())
+  username        String   @unique
+  passwordHash    String   @map("password_hash")
+  walletPubkey    String   @unique @map("wallet_pubkey")
+  walletSecretEnc String   @map("wallet_secret_enc")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamp(3)
+
+  duelsChallenged Duel[] @relation("challenger")
+  duelsAccepted   Duel[] @relation("opponent")
+
+  @@map("users")
+}
+
+model Duel {
+  id           String   @id @default(cuid())
+  slug         String   @unique
+  challengerId String   @map("challenger_id")
+  opponentId   String?  @map("opponent_id")
+  fixtureId    BigInt   @map("fixture_id")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamp(3)
+
+  challenger User  @relation("challenger", fields: [challengerId], references: [id])
+  opponent   User? @relation("opponent", fields: [opponentId], references: [id])
+
+  @@map("duels")
+}
+
+// ---- cranker-owned (mirrored in cranker/src/db.ts) ----
+
+model Fixture {
+  fixtureId     BigInt   @id @map("fixture_id")
+  participant1  String
+  participant2  String
+  startTime     BigInt   @map("start_time")
+  competitionId Int?     @map("competition_id")
+  statusId      Int      @default(1) @map("status_id")
+  simulated     Boolean  @default(false)
+  updatedAt     DateTime @default(now()) @map("updated_at") @db.Timestamp(3)
+
+  @@map("fixtures")
+}
+
+model ScoreState {
+  fixtureId BigInt   @id @map("fixture_id")
+  goals1    Int      @default(0)
+  goals2    Int      @default(0)
+  h1goals1  Int      @default(0)
+  h1goals2  Int      @default(0)
+  yellows1  Int      @default(0)
+  yellows2  Int      @default(0)
+  reds1     Int      @default(0)
+  reds2     Int      @default(0)
+  corners1  Int      @default(0)
+  corners2  Int      @default(0)
+  statusId  Int      @default(1) @map("status_id")
+  ts        BigInt   @default(0)
+  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamp(3)
+
+  @@map("score_state")
+}
+
+model TickerEvent {
+  id        Int      @id @default(autoincrement())
+  fixtureId BigInt   @map("fixture_id")
+  seq       Int
+  ts        BigInt
+  kind      String
+  team      Int?
+  label     String
+  weight    Float    @default(0.3)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(3)
+
+  @@unique([fixtureId, seq, kind], map: "ticker_events_dedupe")
+  @@map("ticker_events")
+}
+
+model Card {
+  marketId          BigInt   @id @map("market_id")
+  fixtureId         BigInt   @map("fixture_id")
+  marketPda         String   @map("market_pda")
+  statKey           Int      @map("stat_key")
+  threshold         Int
+  team              Int?
+  question          String
+  triggerKind       String   @map("trigger_kind")
+  triggerLabel      String   @map("trigger_label")
+  createdTs         BigInt   @map("created_ts")
+  deadlineTs        BigInt   @map("deadline_ts")
+  openingYesOddsBps Int      @map("opening_yes_odds_bps")
+  openingNoOddsBps  Int      @map("opening_no_odds_bps")
+  yesOddsBps        Int      @map("yes_odds_bps")
+  noOddsBps         Int      @map("no_odds_bps")
+  status            String   @default("open")
+  settledProofTs    BigInt?  @map("settled_proof_ts")
+  createSig         String?  @map("create_sig")
+  settleSig         String?  @map("settle_sig")
+  settleSeq         Int?     @map("settle_seq")
+  yesCount          Int      @default(0) @map("yes_count")
+  noCount           Int      @default(0) @map("no_count")
+  yesStaked         BigInt   @default(0) @map("yes_staked")
+  noStaked          BigInt   @default(0) @map("no_staked")
+  updatedAt         DateTime @default(now()) @map("updated_at") @db.Timestamp(3)
+
+  @@index([fixtureId], map: "cards_fixture")
+  @@map("cards")
+}
+
+model Position {
+  positionPda String   @id @map("position_pda")
+  marketId    BigInt   @map("market_id")
+  userPubkey  String   @map("user_pubkey")
+  side        Boolean
+  amount      BigInt
+  oddsBps     Int      @map("odds_bps")
+  lockedTs    BigInt   @map("locked_ts")
+  claimed     Boolean  @default(false)
+  won         Boolean  @default(false)
+  predictSig  String?  @map("predict_sig")
+  updatedAt   DateTime @default(now()) @map("updated_at") @db.Timestamp(3)
+
+  @@index([marketId], map: "positions_market")
+  @@index([userPubkey], map: "positions_user")
+  @@map("positions")
+}
+
+model Player {
+  userPubkey   String   @id @map("user_pubkey")
+  points       BigInt   @default(0)
+  streak       Int      @default(0)
+  bestStreak   Int      @default(0) @map("best_streak")
+  correct      Int      @default(0)
+  total        Int      @default(0)
+  lastRefillTs BigInt   @default(0) @map("last_refill_ts")
+  updatedAt    DateTime @default(now()) @map("updated_at") @db.Timestamp(3)
+
+  @@map("players")
+}
+
+model ReplayRequest {
+  id          Int       @id @default(autoincrement())
+  fixtureId   BigInt    @map("fixture_id")
+  speed       Float     @default(1)
+  status      String    @default("pending")
+  error       String?
+  requestedAt DateTime  @default(now()) @map("requested_at") @db.Timestamp(3)
+  startedAt   DateTime? @map("started_at") @db.Timestamp(3)
+  finishedAt  DateTime? @map("finished_at") @db.Timestamp(3)
+
+  @@map("replay_requests")
+}

@@ -1,0 +1,21 @@
+# secrets & wallets — never committed
+*.env
+.env*
+!.env.example
+**/_keys/
+*-keypair.json
+*wallet*.json
+
+# build output
+node_modules/
+target/
+.anchor/
+.next/
+out/
+dist/
+
+# program test fixtures are dumped from devnet, not committed
+program/programs/bigshout/tests/fixtures/*.so
+
+.DS_Store
+*.log

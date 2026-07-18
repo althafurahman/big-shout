@@ -1,0 +1,30 @@
+{
+  "name": "bigshout-cranker",
+  "version": "0.1.0",
+  "private": true,
+  "description": "BigShout cranker: streams TxLINE scores/odds, fires prediction cards, updates odds, submits settlement proofs, sweeps claims, indexes chain state, and replays historical matches through the live pipeline",
+  "scripts": {
+    "start": "ts-node src/index.ts",
+    "activate": "ts-node src/activate.ts",
+    "replay": "ts-node src/replay.ts",
+    "init-config": "ts-node src/init-config.ts"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "0.32.1",
+    "@solana/spl-token": "^0.4.9",
+    "@solana/web3.js": "^1.91.9",
+    "axios": "^1.12.0",
+    "bn.js": "^5.2.1",
+    "dotenv": "^16.4.7",
+    "eventsource": "^4.0.0",
+    "pg": "^8.13.1",
+    "tweetnacl": "^1.0.3"
+  },
+  "devDependencies": {
+    "@types/bn.js": "^5.1.0",
+    "@types/node": "^22.13.4",
+    "@types/pg": "^8.11.10",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.3"
+  }
+}
