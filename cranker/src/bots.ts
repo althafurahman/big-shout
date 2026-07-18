@@ -24,6 +24,13 @@ interface Bot {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+// The public devnet RPC 429s under load and web3.js can surface that as an
+// unhandled rejection from its confirm-polling callbacks — never let that
+// kill the crowd.
+process.on("unhandledRejection", (e: any) => {
+  console.error("[bots] rpc hiccup:", e?.message?.slice(0, 100) ?? e);
+});
+
 async function main() {
   const raw = JSON.parse(
     fs.readFileSync(path.resolve(__dirname, "../_keys/bots.json"), "utf8")
@@ -48,7 +55,9 @@ async function main() {
       const marketId = BigInt(card.market_id);
       const deadline = Number(card.deadline_ts);
       if (deadline - now < 20) continue; // too late to pile in
+      let pileIn = 0;
       for (const bot of bots) {
+        if (pileIn >= 8) break; // keep tx volume gentle on the public RPC
         const key = `${card.market_id}:${bot.username}`;
         if (played.has(key)) continue;
         played.add(key);
@@ -58,13 +67,14 @@ async function main() {
         try {
           await chain.predictAs(bot.keypair, marketId, side, BigInt(stake));
           console.log(`[bots] ${bot.username}: ${side ? "YES" : "NO"} ${stake} on ${card.market_id}`);
+          pileIn++;
         } catch (e: any) {
           console.error(`[bots] ${bot.username} failed:`, e.message?.slice(0, 100));
         }
-        await sleep(400); // spread the crowd out
+        await sleep(1500); // spread the crowd out
       }
     }
-    await sleep(5000);
+    await sleep(8000);
   }
 }
 
