@@ -32,13 +32,51 @@ async function get(path: string, retry = true): Promise<any> {
   return r.json();
 }
 
+/** The scores GET endpoints return SSE-framed text (`data: {...}` lines)
+ *  even for a one-shot request — unwrap that or plain JSON. */
+function parseSseRecords(body: string): any[] {
+  try {
+    const j = JSON.parse(body);
+    return Array.isArray(j) ? j : [j];
+  } catch {
+    /* not plain JSON — fall through to SSE parsing */
+  }
+  const out: any[] = [];
+  for (const line of body.split(/\r?\n/)) {
+    if (line.startsWith("data:")) {
+      try {
+        out.push(JSON.parse(line.slice(5)));
+      } catch {
+        /* partial line */
+      }
+    }
+  }
+  return out;
+}
+
+async function getRecords(path: string, retry = true): Promise<any[]> {
+  const r = await fetch(`${config.apiBase}${path}`, {
+    headers: {
+      Authorization: `Bearer ${jwt}`,
+      "X-Api-Token": config.txApiToken,
+    },
+    cache: "no-store",
+  });
+  if ((r.status === 401 || r.status === 403) && retry) {
+    await renewJwt();
+    return getRecords(path, false);
+  }
+  if (!r.ok) throw new Error(`TxLINE ${path} -> ${r.status}`);
+  return parseSseRecords(await r.text());
+}
+
 export const txline = {
   fixturesSnapshot: (startEpochDay: number, competitionId?: number) =>
     get(
       `/fixtures/snapshot?startEpochDay=${startEpochDay}${competitionId ? `&competitionId=${competitionId}` : ""}`
     ),
-  scoresHistorical: (fixtureId: number) => get(`/scores/historical/${fixtureId}`),
-  scoresSnapshot: (fixtureId: number) => get(`/scores/snapshot/${fixtureId}`),
+  scoresHistorical: (fixtureId: number) => getRecords(`/scores/historical/${fixtureId}`),
+  scoresSnapshot: (fixtureId: number) => getRecords(`/scores/snapshot/${fixtureId}`),
   statValidation: (fixtureId: number, seq: number, statKeys: number[]) =>
     get(`/scores/stat-validation?fixtureId=${fixtureId}&seq=${seq}&statKeys=${statKeys.join(",")}`),
 };

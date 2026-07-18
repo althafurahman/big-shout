@@ -2,6 +2,28 @@ import axios, { AxiosInstance } from "axios";
 import { config } from "./config";
 
 /**
+ * The scores GET endpoints (historical/updates/snapshot) return SSE-framed
+ * text (`data: {...}\nid: N`) even for a one-shot request — this unwraps
+ * either that or plain JSON. See docs/txline-api-feedback.md.
+ */
+export function parseSseRecords(body: any): any[] {
+  if (Array.isArray(body)) return body;
+  if (body == null) return [];
+  if (typeof body === "object") return [body];
+  const out: any[] = [];
+  for (const line of String(body).split(/\r?\n/)) {
+    if (line.startsWith("data:")) {
+      try {
+        out.push(JSON.parse(line.slice(5)));
+      } catch {
+        /* partial/keepalive line */
+      }
+    }
+  }
+  return out;
+}
+
+/**
  * Thin TxLINE API client with automatic guest-JWT renewal.
  * Requires an already-activated API token (config.txApiToken); the guest JWT
  * is disposable and renewed on any 401.
@@ -49,15 +71,15 @@ export class TxLine {
   }
 
   async scoresHistorical(fixtureId: number): Promise<any[]> {
-    return (await this.http.get(`/scores/historical/${fixtureId}`)).data ?? [];
+    return parseSseRecords((await this.http.get(`/scores/historical/${fixtureId}`)).data);
   }
 
   async scoresUpdates(fixtureId: number): Promise<any[]> {
-    return (await this.http.get(`/scores/updates/${fixtureId}`)).data ?? [];
+    return parseSseRecords((await this.http.get(`/scores/updates/${fixtureId}`)).data);
   }
 
   async scoresSnapshot(fixtureId: number): Promise<any[]> {
-    return (await this.http.get(`/scores/snapshot/${fixtureId}`)).data ?? [];
+    return parseSseRecords((await this.http.get(`/scores/snapshot/${fixtureId}`)).data);
   }
 
   async oddsSnapshot(fixtureId: number): Promise<any> {

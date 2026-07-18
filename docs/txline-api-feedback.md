@@ -16,3 +16,11 @@ and re-confirmed here.
 - The docs' quickstart signs `${txSig}:${LEAGUES}:${jwt}` — for the free bundle
   (`LEAGUES = []`) this silently becomes a double-colon string; an explicit example for
   the empty-league case would save an activation 403 loop.
+- **`GET /api/scores/historical/{id}` (and `/updates`, `/snapshot`) return SSE-framed
+  text** (`data: {...}\nid: N\n\n` blocks) even for a plain one-shot GET with no
+  `Accept: text/event-stream` header — while `/fixtures/snapshot` and
+  `/scores/stat-validation` return plain JSON. A client that calls `.json()` gets a parse
+  error and no hint why. Either return a JSON array for non-streaming requests or document
+  the framing per endpoint.
+- Historical records use PascalCase field names (`FixtureId`, `Seq`, `Ts`, `Stats`) while
+  some other surfaces use camelCase — tolerant adapters remain necessary.
