@@ -46,6 +46,8 @@ interface OpenMarket {
   family: string;
   team: number;
   pYes0: number;
+  /** Last odds sent on-chain, cached to avoid a fetch per drift tick. */
+  lastYesBps: number;
   settling: boolean;
   settled: boolean;
 }
@@ -131,6 +133,7 @@ export class Engine {
         family: card?.trigger_kind === "yellow" ? "booking" : card?.trigger_kind === "idle" ? "corner" : "goal",
         team: card?.team ?? 1,
         pYes0: 0.25,
+        lastYesBps: m.account.yesOddsBps,
         settling: false,
         settled: false,
       };
@@ -254,6 +257,7 @@ export class Engine {
         family: spec.family,
         team: spec.team,
         pYes0: spec.pYes,
+        lastYesBps: yesBps,
         settling: false,
         settled: false,
       });
@@ -335,12 +339,11 @@ export class Engine {
         m.fixtureId, m.team, m.pYes0, m.createdTs, m.deadlineTs, nowMs
       );
       try {
-        const market = await this.chain.fetchMarket(m.marketId);
-        if (!market) continue;
-        const dy = Math.abs(market.yesOddsBps - yesBps) / market.yesOddsBps;
+        const dy = Math.abs(m.lastYesBps - yesBps) / m.lastYesBps;
         if (dy < 0.02) continue; // don't spam txs for sub-2% moves
         await this.chain.updateOdds(m.marketId, yesBps, noBps);
         await this.db.updateCardOdds(m.marketId, yesBps, noBps);
+        m.lastYesBps = yesBps;
       } catch (e: any) {
         console.error(`[odds] market ${m.marketId}:`, e.message?.slice(0, 120));
       }

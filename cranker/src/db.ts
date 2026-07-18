@@ -256,15 +256,19 @@ export class Db {
     lockedTs: number;
     claimed: boolean;
     won: boolean;
+    predictSig?: string;
   }): Promise<void> {
     await this.pool.query(
-      `INSERT INTO positions (position_pda, market_id, user_pubkey, side, amount, odds_bps, locked_ts, claimed, won)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+      `INSERT INTO positions (position_pda, market_id, user_pubkey, side, amount, odds_bps, locked_ts, claimed, won, predict_sig)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
        ON CONFLICT (position_pda) DO UPDATE SET
-         claimed=EXCLUDED.claimed, won=EXCLUDED.won, updated_at=CURRENT_TIMESTAMP`,
+         claimed=EXCLUDED.claimed, won=EXCLUDED.won,
+         predict_sig=COALESCE(positions.predict_sig, EXCLUDED.predict_sig),
+         updated_at=CURRENT_TIMESTAMP`,
       [
         p.positionPda, p.marketId.toString(), p.userPubkey, p.side,
         p.amount.toString(), p.oddsBps, p.lockedTs, p.claimed, p.won,
+        p.predictSig ?? null,
       ]
     );
   }

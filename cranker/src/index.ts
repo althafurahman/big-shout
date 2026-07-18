@@ -17,6 +17,13 @@ import { TxLine } from "./txline";
  *  - picks up judge-triggered replay requests from the DB and runs the
  *    replay harness through this same pipeline.
  */
+
+// The public devnet RPC 429s under load and web3.js can surface that as an
+// unhandled rejection from its retry callbacks — log and keep running.
+process.on("unhandledRejection", (e: any) => {
+  console.error("[rpc] hiccup:", e?.message?.slice(0, 120) ?? e);
+});
+
 async function main() {
   const db = new Db();
   await db.ensureSchema();
@@ -76,7 +83,7 @@ async function main() {
   setInterval(() => void engine.expiryTick(), 30_000);
   setInterval(() => void engine.oddsTick(), 45_000);
   setInterval(() => void engine.idleTick(), 60_000);
-  setInterval(() => void engine.indexTick(), 20_000);
+  setInterval(() => void engine.indexTick(), 45_000);
 
   // Judge-triggered replays, queued by the web app.
   let replayBusy = false;

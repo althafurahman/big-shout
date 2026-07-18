@@ -8,6 +8,13 @@ import { TxLine } from "./txline";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+// The public devnet RPC 429s under load and web3.js can surface that as an
+// unhandled rejection from its retry callbacks — log and keep running.
+process.on("unhandledRejection", (e: any) => {
+  console.error("[rpc] hiccup:", e?.message?.slice(0, 120) ?? e);
+});
+
+
 /**
  * The replay harness: pipes a finished fixture's historical records through
  * the SAME pipeline as live — same card triggers, same odds drift, same
@@ -67,7 +74,7 @@ export async function runReplay(
       await engine.expiryTick();
       await engine.oddsTick();
     }
-    if (now - lastIndex > 30_000) {
+    if (now - lastIndex > 60_000) {
       lastIndex = now;
       await engine.indexTick();
     }

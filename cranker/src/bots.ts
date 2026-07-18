@@ -65,7 +65,19 @@ async function main() {
         const side = Math.random() < bot.yesBias;
         const stake = [25, 50, 50, 100, 100, 250][Math.floor(Math.random() * 6)];
         try {
-          await chain.predictAs(bot.keypair, marketId, side, BigInt(stake));
+          const sig = await chain.predictAs(bot.keypair, marketId, side, BigInt(stake));
+          await db.upsertPosition({
+            positionPda: chain.positionPda(chain.marketPda(marketId), bot.keypair.publicKey).toBase58(),
+            marketId,
+            userPubkey: bot.keypair.publicKey.toBase58(),
+            side,
+            amount: BigInt(stake),
+            oddsBps: side ? card.yes_odds_bps : card.no_odds_bps,
+            lockedTs: Math.floor(Date.now() / 1000),
+            claimed: false,
+            won: false,
+            predictSig: sig,
+          });
           console.log(`[bots] ${bot.username}: ${side ? "YES" : "NO"} ${stake} on ${card.market_id}`);
           pileIn++;
         } catch (e: any) {
