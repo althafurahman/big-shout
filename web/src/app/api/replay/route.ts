@@ -10,6 +10,17 @@ import { field, txline } from "@/lib/txline";
  */
 
 export async function GET() {
+  // Fixtures whose history TxLINE hasn't published yet (a failed attempt is
+  // recorded) shouldn't be offered to judges at all.
+  const unavailable = new Set(
+    (
+      await prisma.replayRequest.findMany({
+        where: { status: "error", error: { contains: "no historical records" } },
+        select: { fixtureId: true },
+      })
+    ).map((r) => Number(r.fixtureId))
+  );
+
   const [requests, finished] = await Promise.all([
     prisma.replayRequest.findMany({ orderBy: { id: "desc" }, take: 5 }),
     (async () => {
@@ -18,6 +29,7 @@ export async function GET() {
         const fixtures = await txline.fixturesSnapshot(today - 12, config.competitionId);
         return (fixtures as any[])
           .filter((f) => (field(f, "startTime") ?? 0) < Date.now() - 3 * 3600_000)
+          .filter((f) => !unavailable.has(field(f, "fixtureId")))
           .map((f) => ({
             fixtureId: field(f, "fixtureId"),
             p1: field(f, "participant1"),
