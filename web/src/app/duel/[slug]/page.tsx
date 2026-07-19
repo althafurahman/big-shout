@@ -1,133 +1,220 @@
 "use client";
 
 import Link from "next/link";
-import { use } from "react";
+import { use, useState } from "react";
 import { api, useMe, usePoll } from "@/lib/client";
-import { fmtOdds } from "@/lib/meta";
+import { flagFor, isFinished, isLive, phaseLabel } from "@/lib/meta";
 
-/** Two fans, one match, side by side. One question: who knows football. */
-export default function DuelPage({ params }: { params: Promise<{ slug: string }> }) {
+/** The match room: your crew around one match, scored live. */
+export default function RoomPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
   const { me } = useMe();
   const { data, refresh } = usePoll<any>(`/api/duel/${slug}`, 5000);
+  const [copied, setCopied] = useState(false);
+  const [joining, setJoining] = useState(false);
 
   if (!data) {
     return <div className="mt-8 h-64 animate-pulse rounded-2xl border border-line bg-surface" />;
   }
   if (data.error) return <p className="mt-10 text-center text-muted">{data.error}</p>;
 
+  const f = data.fixture;
+  const live = f && isLive(f.statusId);
+  const done = f && isFinished(f.statusId);
+  const board: any[] = data.board ?? [];
+  const podium = board.slice(0, 3);
+  const rest = board.slice(3);
+
   async function join() {
-    await api(`/api/duel/${slug}`, { method: "POST" });
-    refresh();
+    setJoining(true);
+    try {
+      await api(`/api/duel/${slug}`, { method: "POST" });
+      refresh();
+    } finally {
+      setJoining(false);
+    }
   }
 
-  const sides = [data.challenger, data.opponent].filter(Boolean);
-  const leader =
-    sides.length === 2 && sides[0].correct !== sides[1].correct
-      ? sides[0].correct > sides[1].correct
-        ? sides[0].username
-        : sides[1].username
-      : null;
+  async function copyInvite() {
+    await navigator.clipboard.writeText(`${location.origin}/duel/${slug}`);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }
 
   return (
-    <div className="mx-auto max-w-2xl pt-8">
-      <h1 className="display text-center text-3xl">The Duel</h1>
-      {data.fixture && (
-        <p className="mt-1 text-center text-sm text-muted">
-          {data.fixture.p1} vs {data.fixture.p2}
-          {data.fixture.simulated ? " · simulated live" : ""}
-        </p>
+    <div className="mx-auto max-w-2xl pt-6">
+      <p className="wc-eyebrow text-center text-[11px] font-bold uppercase">⚔️ Match room</p>
+
+      {f && (
+        <Link
+          href={`/match/${f.fixtureId}`}
+          className="mt-3 block rounded-2xl border border-line bg-surface p-4 transition hover:border-brand"
+        >
+          <div className="flex items-center justify-center gap-2 text-[11px] font-bold uppercase tracking-widest text-muted">
+            {live && <span className="live-dot" />}
+            {phaseLabel(f.statusId)}
+            {f.simulated && (
+              <span className="rounded border border-info/50 px-1.5 py-0.5 text-[10px] text-info">Replay</span>
+            )}
+          </div>
+          <div className="mt-2 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+            <span className="flex min-w-0 items-center justify-end gap-2">
+              <span className="display truncate text-lg">{f.p1}</span>
+              <span className="text-2xl">{flagFor(f.p1)}</span>
+            </span>
+            <span className="display text-2xl tabular-nums">
+              {live || done ? `${f.goals1}–${f.goals2}` : "vs"}
+            </span>
+            <span className="flex min-w-0 items-center gap-2">
+              <span className="text-2xl">{flagFor(f.p2)}</span>
+              <span className="display truncate text-lg">{f.p2}</span>
+            </span>
+          </div>
+          {!done && (
+            <p className="mt-2 text-center text-xs font-bold text-brand">
+              Open the match to make your calls →
+            </p>
+          )}
+        </Link>
       )}
 
-      <div className="mt-6 grid grid-cols-2 gap-4">
-        {[data.challenger, data.opponent].map((side: any, i: number) =>
-          side ? (
-            <div
-              key={i}
-              className={`rounded-2xl border p-4 text-center ${
-                leader === side.username ? "border-brand bg-brand/5" : "border-line bg-surface"
-              }`}
-            >
-              <Link href={`/u/${side.username}`} className="display text-xl hover:text-brand">
-                @{side.username}
-              </Link>
-              <p className="display mt-2 text-4xl">
-                {side.correct}
-                <span className="text-lg text-muted">/{side.total}</span>
-              </p>
-              <p className="text-xs uppercase tracking-wider text-muted">settled calls right</p>
-              {leader === side.username && (
-                <p className="mt-2 text-xs font-black text-brand">KNOWS FOOTBALL</p>
+      <div className="mt-3 flex gap-2">
+        <button
+          onClick={copyInvite}
+          className="flex-1 rounded-xl bg-brand py-2.5 text-sm font-bold text-black transition hover:brightness-110"
+        >
+          {copied ? "Invite link copied ✓" : "Copy invite link"}
+        </button>
+        {data.canJoin && (
+          <button
+            onClick={join}
+            disabled={joining}
+            className="flex-1 rounded-xl border border-brand py-2.5 text-sm font-bold text-brand transition hover:bg-brand/10 disabled:opacity-50"
+          >
+            {joining ? "Joining…" : "Take a seat"}
+          </button>
+        )}
+        {!me && (
+          <Link
+            href={`/auth?next=${encodeURIComponent(`/duel/${slug}`)}`}
+            className="flex flex-1 items-center justify-center rounded-xl border border-brand py-2.5 text-sm font-bold text-brand transition hover:bg-brand/10"
+          >
+            Sign in to join
+          </Link>
+        )}
+      </div>
+
+      {/* Room leaderboard */}
+      <h2 className="mt-7 text-xs font-bold uppercase tracking-widest text-muted">
+        Room leaderboard
+      </h2>
+      {board.length === 0 ? (
+        <p className="mt-2 rounded-xl border border-line bg-surface p-5 text-center text-sm text-muted">
+          Nobody in the room yet — copy the invite link and get your crew in.
+        </p>
+      ) : (
+        <>
+          {podium.length > 1 ? (
+            <div className="mt-3 grid grid-cols-3 items-end gap-2">
+              {[podium[1], podium[0], podium[2]].map((m, i) =>
+                m ? (
+                  <div
+                    key={m.username}
+                    className={`rounded-2xl border p-3 text-center ${
+                      i === 1 ? "border-brand bg-brand/10 pb-6" : "border-line bg-surface"
+                    }`}
+                  >
+                    <p className="text-lg">{i === 1 ? "🥇" : i === 0 ? "🥈" : "🥉"}</p>
+                    <Link
+                      href={`/u/${m.username}`}
+                      className="display block truncate text-base hover:text-brand"
+                    >
+                      {m.username}
+                    </Link>
+                    <p className="display mt-1 text-3xl">
+                      {m.correct}
+                      <span className="text-sm text-muted">/{m.settled}</span>
+                    </p>
+                    <p className="text-[10px] uppercase tracking-wider text-muted">right</p>
+                    {m.isYou && <p className="mt-1 text-[10px] font-black text-brand">YOU</p>}
+                  </div>
+                ) : (
+                  <div key={i} />
+                )
               )}
             </div>
           ) : (
-            <div key={i} className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-line p-4 text-center">
-              <p className="text-sm text-muted">Empty chair</p>
-              {data.canJoin ? (
-                <button
-                  onClick={join}
-                  className="mt-2 rounded-full bg-brand px-4 py-1.5 text-sm font-bold text-black"
+            <div className="mt-3 rounded-2xl border border-line bg-surface p-4 text-center">
+              <p className="display text-lg">{podium[0]?.username}</p>
+              <p className="text-sm text-muted">is waiting for challengers…</p>
+            </div>
+          )}
+          {rest.length > 0 && (
+            <div className="mt-2 space-y-1.5">
+              {rest.map((m, i) => (
+                <div
+                  key={m.username}
+                  className={`flex items-center gap-3 rounded-xl border px-4 py-2.5 text-sm ${
+                    m.isYou ? "border-brand/60 bg-brand/10" : "border-line bg-surface"
+                  }`}
                 >
-                  Take the seat
-                </button>
-              ) : !me ? (
-                <Link href="/auth" className="mt-2 text-sm font-bold text-brand hover:underline">
-                  Sign in to accept
-                </Link>
-              ) : null}
+                  <span className="w-6 font-black tabular-nums text-muted">{i + 4}</span>
+                  <Link href={`/u/${m.username}`} className="flex-1 font-semibold hover:text-brand">
+                    @{m.username} {m.isYou && <span className="text-xs text-brand">· you</span>}
+                  </Link>
+                  <span className="tabular-nums">
+                    {m.correct}/{m.settled} <span className="text-muted">right</span>
+                  </span>
+                  <span className="tabular-nums text-muted">+{m.pointsWon}</span>
+                </div>
+              ))}
             </div>
-          )
-        )}
-      </div>
+          )}
+        </>
+      )}
 
-      <h2 className="mt-8 text-xs font-bold uppercase tracking-widest text-muted">
-        Card by card
-      </h2>
-      <div className="mt-2 space-y-2">
-        {data.cards.map((c: any) => {
-          const pick = (side: any) =>
-            side?.calls?.find((x: any) => x.marketId === c.marketId);
-          const a = pick(data.challenger);
-          const b = pick(data.opponent);
-          const chip = (p: any) =>
-            !p || p.side === null ? (
-              <span className="text-xs text-muted">—</span>
-            ) : (
-              <span
-                className={`text-xs font-black ${
-                  p.claimed ? (p.won ? "text-yes" : "text-no") : "text-info"
-                }`}
-              >
-                {p.side ? "YES" : "NO"} @ {fmtOdds(p.oddsBps)}
-                {p.claimed ? (p.won ? " ✓" : " ✗") : ""}
-              </span>
-            );
-          return (
-            <div key={c.marketId} className="rounded-xl border border-line bg-surface px-4 py-3">
-              <p className="text-sm">{c.question}</p>
-              <div className="mt-1.5 grid grid-cols-2 gap-2">
-                <div>{chip(a)}</div>
-                <div className="text-right">{chip(b)}</div>
+      {/* Card-by-card picks */}
+      {data.cards.length > 0 && (
+        <>
+          <h2 className="mt-7 text-xs font-bold uppercase tracking-widest text-muted">
+            Card by card
+          </h2>
+          <div className="mt-2 space-y-2">
+            {data.cards.map((c: any) => (
+              <div key={c.marketId} className="rounded-xl border border-line bg-surface px-4 py-3">
+                <div className="flex items-start justify-between gap-3">
+                  <p className="text-sm">{c.question}</p>
+                  {c.status !== "open" && (
+                    <span className={`shrink-0 text-xs font-black ${c.status === "yes_won" ? "text-yes" : "text-no"}`}>
+                      {c.status === "yes_won" ? "YES ✓" : "NO ✗"}
+                    </span>
+                  )}
+                </div>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {c.picks.length === 0 ? (
+                    <span className="text-xs text-muted">No one in the room called this one</span>
+                  ) : (
+                    c.picks.map((p: any) => (
+                      <span
+                        key={p.username}
+                        className={`rounded-full border px-2 py-0.5 text-[11px] font-bold ${
+                          p.claimed
+                            ? p.won
+                              ? "border-yes/60 text-yes"
+                              : "border-no/60 text-no"
+                            : "border-info/50 text-info"
+                        }`}
+                      >
+                        {p.username}: {p.side ? "YES" : "NO"}
+                        {p.claimed ? (p.won ? " ✓" : " ✗") : ""}
+                      </span>
+                    ))
+                  )}
+                </div>
               </div>
-            </div>
-          );
-        })}
-        {data.cards.length === 0 && (
-          <p className="rounded-xl border border-line bg-surface p-6 text-center text-sm text-muted">
-            No cards on this match yet — they fire as the game plays.
-          </p>
-        )}
-      </div>
-
-      {data.fixture && (
-        <p className="mt-6 text-center">
-          <Link
-            href={`/match/${data.fixture.fixtureId}`}
-            className="font-bold text-brand hover:underline"
-          >
-            Open the match and make your calls →
-          </Link>
-        </p>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

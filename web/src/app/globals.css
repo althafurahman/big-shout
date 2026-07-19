@@ -128,3 +128,31 @@ body {
 
 .countdown-urgent { animation: urgentblink 1s step-end infinite; }
 @keyframes urgentblink { 50% { color: var(--no); } }
+
+/* World Cup night-pitch surface — used only on match heroes. Faint halfway
+   line + center circle drawn in CSS; the one theatrical element. */
+.pitch-surface {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 130%, rgba(33, 233, 124, 0.12), transparent 55%),
+    radial-gradient(110% 140% at 50% -30%, #143a22 0%, #0b2015 48%, #081711 100%);
+}
+.pitch-surface::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 50%, transparent 58px, rgba(255, 255, 255, 0.06) 59px, rgba(255, 255, 255, 0.06) 60px, transparent 61px),
+    linear-gradient(to bottom, transparent calc(50% - 1px), rgba(255, 255, 255, 0.06) 50%, transparent calc(50% + 1px));
+}
+
+/* gold eyebrow for tournament theming */
+.wc-eyebrow {
+  letter-spacing: 0.22em;
+  background: linear-gradient(90deg, #ffd60a, #f5b93d, #ffd60a);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}

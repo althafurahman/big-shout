@@ -67,3 +67,26 @@ export function isFinished(statusId: number): boolean {
 export function fmtOdds(bps: number): string {
   return `${(bps / 10_000).toFixed(2)}x`;
 }
+
+/** National-team flags — at a World Cup, the flag IS the crest. */
+const FLAGS: Record<string, string> = {
+  argentina: "🇦🇷", australia: "🇦🇺", austria: "🇦🇹", algeria: "🇩🇿", belgium: "🇧🇪",
+  brazil: "🇧🇷", cameroon: "🇨🇲", canada: "🇨🇦", chile: "🇨🇱", colombia: "🇨🇴",
+  "costa rica": "🇨🇷", croatia: "🇭🇷", czechia: "🇨🇿", "czech republic": "🇨🇿",
+  denmark: "🇩🇰", ecuador: "🇪🇨", egypt: "🇪🇬", england: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", france: "🇫🇷",
+  germany: "🇩🇪", ghana: "🇬🇭", greece: "🇬🇷", honduras: "🇭🇳", hungary: "🇭🇺",
+  iran: "🇮🇷", iraq: "🇮🇶", ireland: "🇮🇪", italy: "🇮🇹", "ivory coast": "🇨🇮",
+  jamaica: "🇯🇲", japan: "🇯🇵", jordan: "🇯🇴", mali: "🇲🇱", mexico: "🇲🇽",
+  morocco: "🇲🇦", netherlands: "🇳🇱", "new zealand": "🇳🇿", nigeria: "🇳🇬",
+  norway: "🇳🇴", panama: "🇵🇦", paraguay: "🇵🇾", peru: "🇵🇪", poland: "🇵🇱",
+  portugal: "🇵🇹", qatar: "🇶🇦", romania: "🇷🇴", "saudi arabia": "🇸🇦",
+  scotland: "🏴󠁧󠁢󠁳󠁣󠁴󠁿", senegal: "🇸🇳", serbia: "🇷🇸", slovakia: "🇸🇰",
+  slovenia: "🇸🇮", "south africa": "🇿🇦", "south korea": "🇰🇷", korea: "🇰🇷",
+  spain: "🇪🇸", sweden: "🇸🇪", switzerland: "🇨🇭", tunisia: "🇹🇳", turkey: "🇹🇷",
+  ukraine: "🇺🇦", "united states": "🇺🇸", usa: "🇺🇸", uruguay: "🇺🇾",
+  uzbekistan: "🇺🇿", wales: "🏴󠁧󠁢󠁷󠁬󠁳󠁿",
+};
+
+export function flagFor(teamName: string): string {
+  return FLAGS[teamName.trim().toLowerCase()] ?? "⚽";
+}
