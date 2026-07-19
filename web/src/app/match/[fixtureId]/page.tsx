@@ -139,26 +139,6 @@ export default function MatchPage({ params }: { params: Promise<{ fixtureId: str
         name2={data.fixture.p2}
       />
 
-      {/* Rooms are the social spine — front and center, but only while
-          there's still a match to call. */}
-      {!done && (
-        <button
-          onClick={createRoom}
-          disabled={creatingRoom}
-          className="flex w-full items-center justify-between gap-3 rounded-2xl border border-brand/60 bg-brand/10 px-5 py-4 text-left transition hover:bg-brand/20 disabled:opacity-60"
-        >
-          <span>
-            <span className="display text-lg">⚔️ Challenge your friends</span>
-            <span className="mt-0.5 block text-sm text-muted">
-              Open a match room — same cards, live room leaderboard.
-            </span>
-          </span>
-          <span className="shrink-0 rounded-full bg-brand px-4 py-1.5 text-sm font-bold text-black">
-            {creatingRoom ? "Opening…" : me ? "Create room" : "Sign in"}
-          </span>
-        </button>
-      )}
-
       <div className="space-y-5">
         {openCards.length ? (
           openCards.map((c: any) =>
@@ -210,6 +190,26 @@ export default function MatchPage({ params }: { params: Promise<{ fixtureId: str
             )}
           </div>
         )}
+
+      {/* Rooms are the social spine — front and center, but only while
+          there's still a match to call. */}
+      {!done && (
+        <button
+          onClick={createRoom}
+          disabled={creatingRoom}
+          className="flex w-full items-center justify-between gap-3 rounded-2xl border border-brand/60 bg-brand/10 px-5 py-4 text-left transition hover:bg-brand/20 disabled:opacity-60"
+        >
+          <span>
+            <span className="display text-lg">⚔️ Challenge your friends</span>
+            <span className="mt-0.5 block text-sm text-muted">
+              Open a match room — same cards, live room leaderboard.
+            </span>
+          </span>
+          <span className="shrink-0 rounded-full bg-brand px-4 py-1.5 text-sm font-bold text-black">
+            {creatingRoom ? "Opening…" : me ? "Create room" : "Sign in"}
+          </span>
+        </button>
+      )}
 
         <ActiveRooms variant="panel" fixtureId={Number(fixtureId)} />
 
