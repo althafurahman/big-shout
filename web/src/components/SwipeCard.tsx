@@ -40,11 +40,17 @@ export default function SwipeCard({
   mode,
   maxStake,
   onDone,
+  onSkip,
+  windowSecs,
 }: {
   card: CardData;
   mode: SwipeMode;
   maxStake?: number;
   onDone?: (locked: LockedState | null) => void;
+  /** Lets a fan pass on a question without answering it. */
+  onSkip?: () => void;
+  /** Full prediction window, for the draining time bar. */
+  windowSecs?: number;
 }) {
   const [stake, setStake] = useState(50);
   const [locked, setLocked] = useState<LockedState | null>(null);
@@ -232,6 +238,17 @@ export default function SwipeCard({
           NO
         </motion.span>
 
+        {mode !== "practice" && windowSecs && !expired ? (
+          <div className="absolute inset-x-0 top-0 h-1 overflow-hidden rounded-t-2xl bg-surface2">
+            <div
+              className="h-full transition-[width] duration-1000 ease-linear"
+              style={{
+                width: `${Math.max(0, Math.min(100, (timeLeft / windowSecs) * 100))}%`,
+                background: timeLeft <= 20 ? "var(--no)" : "var(--brand)",
+              }}
+            />
+          </div>
+        ) : null}
         {card.triggerLabel && (
           <p className="text-xs font-bold uppercase tracking-widest text-info">
             ⚡ {card.triggerLabel}
@@ -294,11 +311,21 @@ export default function SwipeCard({
         </div>
       )}
 
-      <p className="mt-3 text-center text-xs text-muted">
-        {expired
-          ? "This window has closed — the next moment is coming."
-          : "Swipe right for YES · left for NO"}
-      </p>
+      <div className="mt-3 flex items-center justify-center gap-3 text-xs text-muted">
+        <span>
+          {expired
+            ? "This window has closed — the next moment is coming."
+            : "Swipe right for YES · left for NO"}
+        </span>
+        {onSkip && !expired && pending === null && (
+          <button
+            onClick={onSkip}
+            className="rounded-full border border-line px-2.5 py-0.5 font-semibold transition hover:border-brand hover:text-ink"
+          >
+            Skip →
+          </button>
+        )}
+      </div>
     </div>
   );
 }

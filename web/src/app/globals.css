@@ -156,3 +156,13 @@ body {
   background-clip: text;
   color: transparent;
 }
+
+/* practice feedback: score flies up from the card */
+.float-score {
+  animation: floatscore 1.4s ease-out forwards;
+}
+@keyframes floatscore {
+  0% { opacity: 0; transform: translateY(6px) scale(0.9); }
+  20% { opacity: 1; transform: translateY(-2px) scale(1.15); }
+  100% { opacity: 0; transform: translateY(-34px) scale(1); }
+}

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import ActiveRooms from "@/components/ActiveRooms";
 import GuestBanner from "@/components/GuestBanner";
 import { usePoll } from "@/lib/client";
 import { flagFor, isFinished, isLive, phaseLabel } from "@/lib/meta";
@@ -105,6 +106,7 @@ export default function FeedPage() {
   return (
     <div className="pt-6">
       <GuestBanner />
+      <ActiveRooms variant="banner" />
 
       <div className="mt-5 flex items-end justify-between gap-3">
         <div>

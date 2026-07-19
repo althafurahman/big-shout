@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { use, useState } from "react";
+import ActiveRooms from "@/components/ActiveRooms";
 import GuestBanner from "@/components/GuestBanner";
 import PressureMeter from "@/components/PressureMeter";
 import SwipeCard from "@/components/SwipeCard";
@@ -18,6 +19,23 @@ export default function MatchPage({ params }: { params: Promise<{ fixtureId: str
   const [showAllSettled, setShowAllSettled] = useState(false);
   const [showAllEvents, setShowAllEvents] = useState(false);
   const [creatingRoom, setCreatingRoom] = useState(false);
+  const [skipped, setSkipped] = useState<number[]>(() => {
+    try {
+      return JSON.parse(sessionStorage.getItem(`bs-skip-${fixtureId}`) ?? "[]");
+    } catch {
+      return [];
+    }
+  });
+
+  function skipCard(marketId: number) {
+    setSkipped((prev) => {
+      const next = [...prev, marketId];
+      try {
+        sessionStorage.setItem(`bs-skip-${fixtureId}`, JSON.stringify(next));
+      } catch { /* private mode */ }
+      return next;
+    });
+  }
 
   if (!data) {
     return <div className="mt-8 h-64 animate-pulse rounded-2xl border border-line bg-surface" />;
@@ -28,7 +46,9 @@ export default function MatchPage({ params }: { params: Promise<{ fixtureId: str
 
   const live = isLive(data.statusId);
   const done = isFinished(data.statusId);
-  const openCards = data.cards.filter((c: any) => c.status === "open");
+  const openAll = data.cards.filter((c: any) => c.status === "open");
+  const openCards = openAll.filter((c: any) => !skipped.includes(c.marketId));
+  const skippedOpen = openAll.length - openCards.length;
   const settledAll = data.cards.filter((c: any) => c.status !== "open");
   const settled = showAllSettled ? settledAll : settledAll.slice(0, 3);
   const posBy = new Map<number, any>((data.positions ?? []).map((p: any) => [Number(p.marketId), p]));
@@ -160,21 +180,38 @@ export default function MatchPage({ params }: { params: Promise<{ fixtureId: str
                 }}
                 mode={me ? "live" : "guest"}
                 maxStake={me?.points}
+                windowSecs={Math.max(1, Number(c.deadlineTs) - Number(c.createdTs))}
+                onSkip={() => skipCard(c.marketId)}
               />
             )
           )
         ) : (
           <div className="rounded-2xl border border-line bg-surface p-6 text-center text-muted">
             <p className="display text-xl text-ink">
-              {done ? "Full time — the calls are in" : "No card open right now"}
+              {done ? "Full time — the calls are in" : skippedOpen > 0 ? "Cards skipped" : "No card open right now"}
             </p>
             <p className="mt-1 text-sm">
               {done
                 ? "Every settled call below is provable on-chain."
+                : skippedOpen > 0
+                ? "You passed on the open cards for now."
                 : "Cards fire off real events — a corner, a shot, a booking. Stay close."}
             </p>
+            {!done && skippedOpen > 0 && (
+              <button
+                onClick={() => {
+                  setSkipped([]);
+                  try { sessionStorage.removeItem(`bs-skip-${fixtureId}`); } catch { /* ok */ }
+                }}
+                className="mt-3 rounded-full border border-line px-4 py-1.5 text-sm font-bold text-ink transition hover:border-brand"
+              >
+                Bring back {skippedOpen} skipped card{skippedOpen > 1 ? "s" : ""}
+              </button>
+            )}
           </div>
         )}
+
+        <ActiveRooms variant="panel" fixtureId={Number(fixtureId)} />
 
         {settledAll.length > 0 && (
           <section>
