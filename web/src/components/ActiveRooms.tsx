@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { usePoll } from "@/lib/client";
-import { flagFor, isLive } from "@/lib/meta";
+import { flagFor, isFinished, isLive } from "@/lib/meta";
 
 interface Room {
   slug: string;
@@ -41,7 +41,10 @@ export default function ActiveRooms({
   // Guard against a stale board flashing when switching between rooms.
   const board = boardData && boardData.slug === openSlug ? boardData : null;
 
-  const rooms = (data?.rooms ?? []).filter((r) => r.active);
+  const allRooms = data?.rooms ?? [];
+  // The home strip is a way back into LIVE sessions; the match panel keeps
+  // a finished match's rooms around as its permanent history.
+  const rooms = variant === "banner" ? allRooms.filter((r) => r.active) : allRooms;
   if (!rooms.length) return null;
 
   function toggleBoard(slug: string) {
@@ -90,7 +93,11 @@ export default function ActiveRooms({
                 {flagFor(r.p1)} {r.p1} {r.goals1}–{r.goals2} {r.p2} {flagFor(r.p2)}
               </span>
               <span className="shrink-0 text-xs font-bold text-brand">
-                {openSlug === r.slug ? "Hide board" : "Session board"}
+                {openSlug === r.slug
+                  ? "Hide board"
+                  : isFinished(r.statusId)
+                  ? "Final standings"
+                  : "Session board"}
               </span>
             </button>
             {openSlug === r.slug && (
