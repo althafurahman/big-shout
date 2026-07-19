@@ -102,7 +102,8 @@ export async function sendPredict(
 export async function fetchMarketAccount(marketId: bigint | number): Promise<any | null> {
   try {
     return await (chain().program.account as any).market.fetch(marketPda(marketId));
-  } catch {
+  } catch (e: any) {
+    console.error("[chain] market fetch failed:", e.message?.slice(0, 200));
     return null;
   }
 }

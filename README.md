@@ -2,7 +2,9 @@
 
 **Big calls, on the record. Sealed before the whistle, settled by the sport's own data, provable forever.**
 
-Built for the TxODDS × Solana World Cup Hackathon — **Consumer & Fan Experiences** track · devnet
+**🌐 Live: [big-shout.vercel.app](https://big-shout.vercel.app)** · Built for the TxODDS × Solana World Cup Hackathon — **Consumer & Fan Experiences** track · devnet
+
+Judges: open the app and swipe — no account needed. No live match on? Hit **[▶ Demo replay](https://big-shout.vercel.app/replay)** and a real finished World Cup match plays through the full live pipeline, settling on devnet with real Merkle proofs. Example receipts already on-chain: an [oracle-proven YES settlement](https://big-shout.vercel.app/verify/1784419170821003) and a [head-to-head duel](https://big-shout.vercel.app/duel/showdown).
 
 Every fan says *"I called it."* Nobody can prove it — group chats are full of retroactive
 geniuses. BigShout makes football takes **unfakeable**: swipe to predict live in-play moments,
@@ -172,8 +174,14 @@ cd cranker && npm run bots                       # seeded fans play the replay
 
 | Component | Address |
 |---|---|
+| Web app | [big-shout.vercel.app](https://big-shout.vercel.app) (Vercel + Neon Postgres) |
 | BigShout program | `DanMuZ6VfwEmhn2rj5hiXVhQXNpNv7ornBRNnjaia9oH` |
 | TxODDS oracle (TxLINE devnet) | `6pW64gN1s2uqjHkn1unFeEjAwJkPGHoppGvS715wyP2J` |
+| Service wallet (operator) | `7Ae1QCEmcuJjGjTKeVayAmexsTE8Yc5qoSej7SXqo5ow` |
+
+Example on-chain settlements from the replay harness (real Merkle proofs, devnet):
+[YES via `validate_stat_v2` CPI](https://explorer.solana.com/tx/myTPMfcwrZipkEbszVjnPMY16JRg1ZV3bUnRgryqSJjYSi1u2zQfnsxuVn83mVAccDfp8D2FKTFky8VrxYJ9cmw?cluster=devnet) ·
+[NO via expiry after grace](https://explorer.solana.com/tx/QYF7H39aU3HTheE76eN3YAKuCXsrRdB3avkCypZKqgktBvmbzA73SSkjdKUxTaim5GmDpABoNWLDUjRysfmfkmH?cluster=devnet)
 
 ## Monetization path
 
