@@ -197,6 +197,7 @@ Example on-chain settlements from the replay harness (real Merkle proofs, devnet
 
 ## Docs
 
+- [`docs/technical-documentation.md`](docs/technical-documentation.md) — full technical documentation
 - [`docs/txline-api-feedback.md`](docs/txline-api-feedback.md) — running API feedback notes
 - [`docs/demo-video.md`](docs/demo-video.md) — demo video script
 - [`SETUP.md`](SETUP.md) — team setup
