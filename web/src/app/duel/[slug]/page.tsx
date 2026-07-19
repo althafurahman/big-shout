@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { use, useState } from "react";
 import { api, useMe, usePoll } from "@/lib/client";
 import { flagFor, isFinished, isLive, phaseLabel } from "@/lib/meta";
@@ -12,6 +13,9 @@ export default function RoomPage({ params }: { params: Promise<{ slug: string }>
   const { data, refresh } = usePoll<any>(`/api/duel/${slug}`, 5000);
   const [copied, setCopied] = useState(false);
   const [joining, setJoining] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const router = useRouter();
 
   if (!data) {
     return <div className="mt-8 h-64 animate-pulse rounded-2xl border border-line bg-surface" />;
@@ -32,6 +36,17 @@ export default function RoomPage({ params }: { params: Promise<{ slug: string }>
       refresh();
     } finally {
       setJoining(false);
+    }
+  }
+
+  async function deleteRoom() {
+    setDeleting(true);
+    try {
+      await api(`/api/duel/${slug}`, { method: "DELETE" });
+      router.push("/feed");
+    } catch {
+      setDeleting(false);
+      setConfirmDelete(false);
     }
   }
 
@@ -215,6 +230,41 @@ export default function RoomPage({ params }: { params: Promise<{ slug: string }>
             ))}
           </div>
         </>
+      )}
+
+      {data.isOwner && (
+        <div className="mt-8 border-t border-line pt-4 text-center">
+          {confirmDelete ? (
+            <div className="rounded-xl border border-no/40 bg-no/10 p-4 text-sm">
+              <p className="font-semibold">
+                Delete this room for everyone? Calls and points stay on the record — only the
+                room goes.
+              </p>
+              <div className="mt-3 flex justify-center gap-3">
+                <button
+                  onClick={deleteRoom}
+                  disabled={deleting}
+                  className="rounded-full bg-no px-5 py-1.5 text-sm font-bold text-white transition hover:brightness-110 disabled:opacity-50"
+                >
+                  {deleting ? "Deleting…" : "Delete room"}
+                </button>
+                <button
+                  onClick={() => setConfirmDelete(false)}
+                  className="rounded-full border border-line px-5 py-1.5 text-sm font-bold transition hover:border-brand"
+                >
+                  Keep it
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => setConfirmDelete(true)}
+              className="text-xs font-semibold text-muted transition hover:text-no"
+            >
+              Delete this room
+            </button>
+          )}
+        </div>
       )}
     </div>
   );

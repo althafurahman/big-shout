@@ -97,6 +97,7 @@ async function roomPayload(slug: string, sessionUserId?: string) {
     })),
     isMember: !!sessionUserId && memberUsers.has(sessionUserId),
     canJoin: !!sessionUserId && !memberUsers.has(sessionUserId),
+    isOwner: !!sessionUserId && duel.challengerId === sessionUserId,
   };
 }
 
@@ -109,6 +110,26 @@ export async function GET(
   const payload = await roomPayload(slug, session.userId);
   if (!payload) return Response.json({ error: "No such room" }, { status: 404 });
   return jsonResponse(payload);
+}
+
+/** The owner can close their room; everyone's calls stay on-chain. */
+export async function DELETE(
+  _req: Request,
+  { params }: { params: Promise<{ slug: string }> }
+) {
+  const { slug } = await params;
+  const session = await getSession();
+  if (!session.userId) return Response.json({ error: "Sign in first" }, { status: 401 });
+
+  const duel = await prisma.duel.findUnique({ where: { slug } });
+  if (!duel) return Response.json({ error: "No such room" }, { status: 404 });
+  if (duel.challengerId !== session.userId) {
+    return Response.json({ error: "Only the room owner can delete it" }, { status: 403 });
+  }
+
+  await prisma.duelMember.deleteMany({ where: { duelId: duel.id } });
+  await prisma.duel.delete({ where: { id: duel.id } });
+  return Response.json({ deleted: true });
 }
 
 /** Take a seat in the room. */

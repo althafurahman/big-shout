@@ -72,10 +72,9 @@ export default function ActiveRooms({
     );
   }
 
-  // panel — this match's rooms first, the rest after
+  // panel — only this match's rooms; the feed banner covers the rest
   const here = rooms.filter((r) => r.fixtureId === fixtureId);
-  const elsewhere = rooms.filter((r) => r.fixtureId !== fixtureId);
-  if (!here.length && !elsewhere.length) return null;
+  if (!here.length) return null;
 
   return (
     <section>
@@ -83,7 +82,7 @@ export default function ActiveRooms({
         Your rooms
       </h3>
       <div className="space-y-2">
-        {[...here, ...elsewhere].map((r) => (
+        {here.map((r) => (
           <div key={r.slug} className="rounded-xl border border-line bg-surface">
             <button
               onClick={() => toggleBoard(r.slug)}
@@ -92,9 +91,6 @@ export default function ActiveRooms({
               <span className="flex items-center gap-2 font-semibold">
                 {isLive(r.statusId) && <span className="live-dot" />}
                 {flagFor(r.p1)} {r.p1} {r.goals1}–{r.goals2} {r.p2} {flagFor(r.p2)}
-                {r.fixtureId !== fixtureId && (
-                  <span className="text-xs font-normal text-muted">(other match)</span>
-                )}
               </span>
               <span className="shrink-0 text-xs font-bold text-brand">
                 {openSlug === r.slug ? "Hide board" : "Session board"}
