@@ -24,3 +24,8 @@ and re-confirmed here.
   the framing per endpoint.
 - Historical records use PascalCase field names (`FixtureId`, `Seq`, `Ts`, `Stats`) while
   some other surfaces use camelCase — tolerant adapters remain necessary.
+- `/api/scores/historical/{id}` for a match finished ~21h earlier (France–England
+  18257865, 3rd-place playoff) returns **HTTP 200 with an empty body** — no records, no
+  error, no hint whether the fixture is uncovered or just not ingested yet. A 404/425 with
+  a reason, or a documented availability SLA for historical data, would let products fail
+  gracefully. (Matches from 2+ days earlier return full history fine.)

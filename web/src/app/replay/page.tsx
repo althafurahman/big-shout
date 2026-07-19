@@ -15,6 +15,7 @@ export default function ReplayPage() {
   const [msg, setMsg] = useState<string | null>(null);
 
   const active = data?.requests?.find((r: any) => ["pending", "running"].includes(r.status));
+  const lastError = !active && data?.requests?.[0]?.status === "error" ? data.requests[0] : null;
 
   async function start(fixtureId: number) {
     setMsg(null);
@@ -53,6 +54,14 @@ export default function ReplayPage() {
         </div>
       )}
       {msg && <p className="mt-4 rounded-xl border border-brand/40 bg-brand/10 p-3 text-sm">{msg}</p>}
+      {lastError && (
+        <p className="mt-4 rounded-xl border border-no/40 bg-no/10 p-3 text-sm">
+          The last replay (fixture {lastError.fixtureId}) couldn&apos;t start
+          {lastError.error?.includes("no historical records")
+            ? " — TxLINE hasn't published that match's history yet. Pick an older match."
+            : ` — ${lastError.error ?? "unknown error"}. Try another match.`}
+        </p>
+      )}
 
       <div className="mt-6 flex items-center gap-3 text-sm">
         <span className="text-muted">Speed</span>
