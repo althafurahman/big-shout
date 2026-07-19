@@ -26,6 +26,13 @@ process.on("unhandledRejection", (e: any) => {
 
 async function main() {
   const db = new Db();
+  // Exactly one live cranker may run: a second instance would fire duplicate
+  // cards for the same pitch events. Postgres advisory lock arbitrates.
+  const lock = await db.pool.query("SELECT pg_try_advisory_lock(815342) AS ok");
+  if (!lock.rows[0].ok) {
+    console.error("[cranker] another live cranker holds the lock — exiting");
+    process.exit(0);
+  }
   await db.ensureSchema();
   const chain = new Chain();
   const tx = new TxLine();
@@ -55,6 +62,11 @@ async function main() {
         startTime: field(f, "startTime") ?? 0,
         competitionId: config.competitionId,
       });
+      // Started before we were watching? Adopt its latest known state.
+      const startedAgo = Date.now() - (field(f, "startTime") ?? 0);
+      if (startedAgo > 15 * 60_000 && (engine.fixtureStatus(fid) ?? 1) <= 1) {
+        await engine.backfillState(fid);
+      }
     }
     console.log(`[discover] tracking ${fixtures.length} fixtures`);
   };

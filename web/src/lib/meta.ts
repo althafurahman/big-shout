@@ -49,6 +49,7 @@ export const PHASE_LABELS: Record<number, string> = {
   15: "Abandoned",
   16: "Cancelled",
   19: "Postponed",
+  100: "Full time",
 };
 
 export function phaseLabel(statusId: number): string {
@@ -60,7 +61,7 @@ export function isLive(statusId: number): boolean {
 }
 
 export function isFinished(statusId: number): boolean {
-  return [5, 10, 13].includes(statusId);
+  return [5, 10, 13, 100].includes(statusId);
 }
 
 export function fmtOdds(bps: number): string {

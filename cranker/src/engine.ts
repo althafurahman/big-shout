@@ -112,6 +112,57 @@ export class Engine {
     }
   }
 
+  /**
+   * For fixtures that started before this process did: pull the scores
+   * snapshot and adopt the LAST record's state — score, phase, seq — without
+   * running triggers, so a finished match can never fire live cards. Covered
+   * fixtures get their real final score; never-covered ones stay at NS.
+   */
+  async backfillState(fid: number): Promise<void> {
+    const f = this.fixtures.get(fid);
+    if (!f) return;
+    try {
+      const records = (await this.tx.scoresHistorical(fid).catch(() => [])).length
+        ? await this.tx.scoresHistorical(fid)
+        : await this.tx.scoresSnapshot(fid);
+      const sorted = records
+        .filter((r) => recSeq(r) !== undefined)
+        .sort((a, b) => (recSeq(a) ?? 0) - (recSeq(b) ?? 0));
+      const last = sorted[sorted.length - 1];
+      if (!last) return;
+      const t = totals(last);
+      // Trailing records (finalisation/coverage) often carry no phase — adopt
+      // the last meaningful phase seen anywhere in the sample.
+      const statusId =
+        [...sorted].reverse().map((r) => recStatusId(r)).find((x) => x !== undefined && x > 1) ??
+        recStatusId(last) ??
+        f.statusId;
+      f.lastSeq = Math.max(f.lastSeq, recSeq(last) ?? 0);
+      f.statusId = statusId;
+      f.lastTotals = {
+        goals1: t.goals1 ?? 0, goals2: t.goals2 ?? 0,
+        yellows1: t.yellows1 ?? 0, yellows2: t.yellows2 ?? 0,
+        reds1: t.reds1 ?? 0, reds2: t.reds2 ?? 0,
+        corners1: t.corners1 ?? 0, corners2: t.corners2 ?? 0,
+      };
+      await this.db.upsertScoreState(fid, {
+        ...(f.lastTotals as Record<string, number>),
+        h1goals1: t.h1goals1 ?? 0,
+        h1goals2: t.h1goals2 ?? 0,
+        statusId,
+        ts: recTs(last) ?? 0,
+      });
+      await this.db.updateFixtureStatus(fid, statusId);
+      console.log(`[backfill] fixture ${fid}: status ${statusId}, ${f.lastTotals.goals1}-${f.lastTotals.goals2} @ seq ${f.lastSeq}`);
+    } catch (e: any) {
+      console.error(`[backfill] fixture ${fid}:`, e.message?.slice(0, 100));
+    }
+  }
+
+  get fixtureStatus() {
+    return (fid: number) => this.fixtures.get(fid)?.statusId;
+  }
+
   /** Recover open markets after a restart — chain state is the source of truth. */
   async loadOpenMarkets(): Promise<void> {
     const markets = await this.chain.allMarkets();

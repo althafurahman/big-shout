@@ -16,7 +16,15 @@ export async function GET() {
   const scoreBy = new Map(scores.map((s) => [s.fixtureId.toString(), s]));
   const cardsBy = new Map(openCards.map((c) => [c.fixtureId.toString(), c._count]));
 
-  const rows = fixtures.map((f) => {
+  // A fixture hours past kickoff still at "not started" was never covered
+  // by the feed (or not yet backfilled) — there is nothing to show for it.
+  const covered = fixtures.filter(
+    (f) =>
+      (scoreBy.get(f.fixtureId.toString())?.statusId ?? f.statusId) > 1 ||
+      Number(f.startTime) > Date.now() - 3.5 * 3600_000
+  );
+
+  const rows = covered.map((f) => {
     const s = scoreBy.get(f.fixtureId.toString());
     return {
       fixtureId: Number(f.fixtureId),
