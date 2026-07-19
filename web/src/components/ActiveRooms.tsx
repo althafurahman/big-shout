@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { api, usePoll } from "@/lib/client";
+import { usePoll } from "@/lib/client";
 import { flagFor, isLive } from "@/lib/meta";
 
 interface Room {
@@ -32,23 +32,20 @@ export default function ActiveRooms({
 }) {
   const { data } = usePoll<{ rooms: Room[] }>("/api/rooms/mine", 20_000);
   const [openSlug, setOpenSlug] = useState<string | null>(null);
-  const [board, setBoard] = useState<any>(null);
+  // The expanded session board stays live while open — same cadence as the
+  // full room page, so standings move as cards settle.
+  const { data: boardData, error: boardError } = usePoll<any>(
+    openSlug ? `/api/duel/${openSlug}` : null,
+    5000
+  );
+  // Guard against a stale board flashing when switching between rooms.
+  const board = boardData && boardData.slug === openSlug ? boardData : null;
 
   const rooms = (data?.rooms ?? []).filter((r) => r.active);
   if (!rooms.length) return null;
 
-  async function toggleBoard(slug: string) {
-    if (openSlug === slug) {
-      setOpenSlug(null);
-      return;
-    }
-    setOpenSlug(slug);
-    setBoard(null);
-    try {
-      setBoard(await api(`/api/duel/${slug}`));
-    } catch {
-      setBoard({ error: true });
-    }
+  function toggleBoard(slug: string) {
+    setOpenSlug(openSlug === slug ? null : slug);
   }
 
   if (variant === "banner") {
@@ -99,9 +96,11 @@ export default function ActiveRooms({
             {openSlug === r.slug && (
               <div className="border-t border-line px-4 py-3">
                 {!board ? (
-                  <div className="h-16 animate-pulse rounded-lg bg-surface2" />
-                ) : board.error ? (
-                  <p className="text-sm text-muted">Couldn&apos;t load this room right now.</p>
+                  boardError ? (
+                    <p className="text-sm text-muted">Couldn&apos;t load this room right now.</p>
+                  ) : (
+                    <div className="h-16 animate-pulse rounded-lg bg-surface2" />
+                  )
                 ) : (
                   <>
                     <div className="space-y-1">
