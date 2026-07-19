@@ -1,0 +1,15 @@
+[Unit]
+Description=BigShout bot crowd
+After=network-online.target bigshout-cranker.service
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/big-shout/cranker
+ExecStart=/usr/bin/node dist/cranker/src/bots.js
+Restart=always
+RestartSec=15
+MemoryMax=300M
+
+[Install]
+WantedBy=multi-user.target

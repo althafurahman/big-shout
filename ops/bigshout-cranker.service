@@ -1,0 +1,16 @@
+[Unit]
+Description=BigShout live cranker (cards, odds, settlement, indexer, replays)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/big-shout/cranker
+ExecStart=/usr/bin/node dist/cranker/src/index.js
+Restart=always
+RestartSec=10
+MemoryMax=400M
+
+[Install]
+WantedBy=multi-user.target
