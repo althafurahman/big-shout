@@ -33,7 +33,9 @@ export async function GET(
   const cardBy = new Map(cards.map((c) => [c.marketId.toString(), c]));
   const fixtureBy = new Map(fixtures.map((f) => [f.fixtureId.toString(), f]));
 
-  const receipts = positions.map((p) => {
+  // Positions whose card metadata isn't in this database (e.g. cleared test
+  // rounds re-mirrored from chain) have nothing to display — skip them.
+  const receipts = positions.filter((p) => cardBy.has(p.marketId.toString())).map((p) => {
     const card = cardBy.get(p.marketId.toString());
     const fixture = card ? fixtureBy.get(card.fixtureId.toString()) : null;
     return {
